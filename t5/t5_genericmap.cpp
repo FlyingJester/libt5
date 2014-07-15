@@ -88,13 +88,20 @@ string Value::GetAsINI(unsigned aStep){
 string Value::GetAsJSON(unsigned aStep){
     string lRepresentation = "";
     
-    
+
     lRepresentation.append(aStep*2, ' ');
+    
+    if(!Name.empty()){
+        lRepresentation.push_back('"');
+        lRepresentation.append(Name);
+        lRepresentation.append("\" : ");
+    }
+    /*
     lRepresentation.push_back('"');
     lRepresentation.append(Name);
     lRepresentation.push_back('"');
     lRepresentation.push_back(':');
-    
+    */
     // Now ready for payload.
     
     bool HasNumOnly = true;
@@ -133,6 +140,7 @@ string Array::GetAsINI(unsigned aStep){
 }
 
 string Array::GetAsJSON(unsigned aStep){
+    /*
     string lRepresentation = "";
     
     lRepresentation.append(aStep*2, ' ');
@@ -141,6 +149,37 @@ string Array::GetAsJSON(unsigned aStep){
     lRepresentation.push_back('"');
     lRepresentation.push_back(':');
     lRepresentation.push_back('[');
+    
+    */
+    
+    string lRepresentation = "";
+    aStep++;
+    lRepresentation.append(aStep*2, ' ');
+    
+    if(!Name.empty()){
+        lRepresentation.push_back('"');
+        lRepresentation.append(Name);
+        lRepresentation.append("\" : ");
+    }
+    
+    lRepresentation.push_back('[');
+    
+    //lRepresentation.push_back('\n');
+    
+    std::list<Entry *>::iterator lIter = Contents.begin();
+    while(lIter!=Contents.end()){
+        //exit(1);
+        lRepresentation.append((*lIter)->GetAsJSON(aStep+1));
+        lRepresentation.push_back('\n');
+        lIter++;
+    
+    }
+    
+    lRepresentation.append(aStep*2, ' ');
+    lRepresentation.append("],\n");
+    return lRepresentation;
+/*
+    
     
     for(std::list<Entry *>::iterator lIter = Contents.begin(); lIter!=Contents.end(); lIter++){
         
@@ -162,6 +201,8 @@ string Array::GetAsJSON(unsigned aStep){
             }
         } // Payload
         
+        lRepresentation.append((*lIter)->Name);
+        
         if(lIter!=Contents.end()--){
             lRepresentation.push_back(',');
             lRepresentation.push_back(' ');
@@ -171,62 +212,12 @@ string Array::GetAsJSON(unsigned aStep){
     lRepresentation.push_back(',');
     
     return lRepresentation;
-
+*/
 }
 
-Array::Array(string &name, string value, Group *group)
-  : Entry(name, group){
-    
-    std::string::iterator lPreviousComma        = value.begin();
-    std::string::iterator lPreviousNonws        = value.begin();
-    std::string::iterator lIter                 = value.begin();
-    while(lIter++!=value.end()){
-        if(!isspace(*lIter)){
-            lPreviousNonws = lIter;
-        }
-        if(*lIter==','){
-            std::string::iterator lStartOfPayload = lPreviousComma;
-            std::string::iterator lEndOfPayload   = lPreviousNonws;
-            while((*lEndOfPayload)==',')
-                lEndOfPayload--;
-
-            while(((*lStartOfPayload) == '"') || isspace(*lStartOfPayload))
-                lStartOfPayload++;
-            
-            while(((*lEndOfPayload)=='"') || isspace(*lEndOfPayload)){
-                lEndOfPayload--;
-            }
-            
-            assert(lEndOfPayload >= lStartOfPayload);
-            assert(lEndOfPayload != value.end());
-            
-            Entry *lEntry = nullptr;
-            std::string lString("");
-                
-            if((*lStartOfPayload=='[') && (*lStartOfPayload==']')){
-            
-                lEntry = new Array(lString, string(lStartOfPayload, lEndOfPayload), (Group *)this);
-            
-            }
-            else if((*lStartOfPayload=='{') && (*lStartOfPayload=='}')){
-            
-                lEntry = new Group(lString, string(lStartOfPayload, lEndOfPayload), (Group *)this);
-            
-            }
-            else{
-            
-                lEntry = new Value(lString, string(lStartOfPayload, lEndOfPayload), (Group *)this);
-                
-            }
-            
-            Contents.push_back(lEntry);
-            
-            lPreviousComma = lIter;
-            
-        }
-        
-    }
-
+Array::Array(string &name, Group *group)
+  : Group(name, group){
+    return;
 }
 
 
@@ -290,7 +281,7 @@ void Group::ReadDataSourceINI(DataSource *aFrom , size_t aRangeStart, size_t aRa
                 { // lGroup
                     Group *lGroup = new Group(lName, lGroups.top());
                     lGroups.push(lGroup);
-                    Contents.push_back(lGroup);
+                    lGroups.top()->Contents.push_back(lGroup);
                 } // lGroup
                 
                 break;
@@ -300,7 +291,7 @@ void Group::ReadDataSourceINI(DataSource *aFrom , size_t aRangeStart, size_t aRa
                 lGroups.top()->Contents.push_back(lEntry);
                 break;
             case lType::ARRAY:
-                lEntry = new Array(lName, lValue, lGroups.top());
+                lEntry = new Array(lName, lGroups.top());
                 lGroups.top()->Contents.push_back(lEntry);
                 break;
             
@@ -374,54 +365,79 @@ void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aR
     string lName;
     string lValue;
     enum {pNAME, pVALUE} lPart = pNAME;
-    enum {tVALUE, tARRAY, tGROUP} lType = tGROUP;
+    enum {tVALUE, tARRAY, tGROUP, tNONE} lType = tNONE;
     enum {NONE, SINGLE, DOUBLE} quotes = NONE;
-    bool lNeedsNextElem = false;
     std::stack<Group *> lGroups = std::stack<Group *>();
     lGroups.push(this);
     
     for(int i = 0; i<aRangeLen; i++){
         char lChar = aFrom->Get<uint8_t>();
-        
-        if(lNeedsNextElem){
-            if(lChar==',')
-                lNeedsNextElem = false;
+        if(lGroups.empty()){ // We've pulled the last object off.
+            lGroups.push(this);
         }
-        
-        if(lNeedsNextElem)
-            continue;
-        
         if(lChar=='{'){
             lType = tGROUP;
         }
         
-        if((lChar==',')||(lChar=='{')){
-            switch(lType){
-                case tGROUP:
-                    lGroups.push(new Group(lName, lGroups.top()));
-                    Contents.push_back(lGroups.top());
-                    break;
-                case tVALUE:
-                    if(!lValue.empty())
-                        lGroups.top()->Contents.push_back(new Value(lName, lValue, lGroups.top()));
-                    break;
-                case tARRAY:
+        if(lChar=='['){
+            lType = tARRAY;
+        }
+        
+        if((lChar==',')||(lChar=='{')||(lChar=='[')||(lChar=='}')||(lChar==']')){
+
+            if(lType==tGROUP){
+                auto g = new Group(lName, lGroups.top());
+                lGroups.top()->Contents.push_back(g);
+                lGroups.push(g);
+                //lGroups.push(new Group(lName, lGroups.top()));
+                //lGroups.top()->Contents.push_back(lGroups.top());
+                //Contents.push_back(lGroups.top());
+            }     
+            if(lType==tARRAY){
+                auto a = new Array(lName, lGroups.top());
+                lGroups.top()->Contents.push_back(a);
+                lGroups.push(a);
+                //lGroups.push(new Array(lName, lGroups.top()));
+                //lGroups.top()->Contents.push_back(lGroups.top());
+                //Contents.push_back(lGroups.top());
+            }
+            if(lType==tVALUE){
+                if(!lValue.empty()){
                     lGroups.top()->Contents.push_back(new Value(lName, lValue, lGroups.top()));
-                    break;
+                }
+                else{
+                    lGroups.top()->Contents.push_back(new Value("", lName, lGroups.top()));
+                }
             }
-            if(lType!=tARRAY){
-                lType = tVALUE;
-                lPart = pNAME;
-            }
+            lType = tNONE;
+            lPart = pNAME;
             
             lName.clear();
             lValue.clear();
-            
+            if((lChar=='}')||(lChar==']')){
+
+                lGroups.pop();
+            }
             continue;
             
         }
+        lType = tVALUE;
+        
+        if(lChar=='\\'){
+            char nChar = aFrom->Get<uint8_t>();
+            if(lPart == pNAME){
+                lName.push_back(lChar);
+                lName.push_back(nChar);
+            }
+            else if(lPart==pVALUE){
+                lValue.push_back(lChar);
+                lValue.push_back(nChar);
+            }
+            continue;
+        }
         
         { // Handle Quote marks.
+            
             if(lChar=='\''){
                 if(quotes!=DOUBLE){
                     
@@ -462,28 +478,7 @@ void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aR
             lPart = pVALUE;
             continue;
         }
-        
-        if(lChar=='['){
-            lGroups.push(new Group(lName, lGroups.top()));
-            Contents.push_back(lGroups.top());
-            lType = tARRAY;
-            continue;
-        }
-        if((lChar==']')||(lChar=='}')){
-            if(lGroups.empty()){ // We've pulled the last object off.
-                continue;
-            }
-            
-            lNeedsNextElem = true;
-            
-            lGroups.pop();
-            lType = tVALUE;
-            lPart = pNAME;
-            continue;
-        }
-        
 
-    
         if(lPart == pNAME)
             lName.push_back(lChar);
         else if(lPart==pVALUE)
@@ -546,11 +541,14 @@ string Group::GetAsJSON(unsigned aStep){
     string lRepresentation = "";
     aStep++;
     lRepresentation.append(aStep*2, ' ');
-    lRepresentation.push_back('"');
-    lRepresentation.append(Name);
-    lRepresentation.append("\" : {");
     
-    lRepresentation.push_back('\n');
+    if(!Name.empty()){
+        lRepresentation.push_back('"');
+        lRepresentation.append(Name);
+        lRepresentation.append("\" : ");
+    }
+    
+    lRepresentation.append("{\n");
     
     std::list<Entry *>::iterator lIter = Contents.begin();
     while(lIter!=Contents.end()){
