@@ -104,15 +104,22 @@ string Value::GetAsJSON(unsigned aStep){
     */
     // Now ready for payload.
     
+    int NumDecimalPoints = 0;
     bool HasNumOnly = true;
     for(int i = 0; i<RawValue.length(); i++){
         if(!isdigit(RawValue[i])){
-            HasNumOnly = false;
-            break;
+            if((RawValue[i]=='.') && ( NumDecimalPoints <=0))
+                NumDecimalPoints++;
+            else if((i==0 ) && (RawValue[i]=='-'))
+                continue;
+            else{
+                HasNumOnly = false;
+                break;
+            }
         }
     }
     
-    if(HasNumOnly||(RawValue=="true")||(RawValue=="false")||(RawValue=="null"))
+    if((!RawValue.empty())&&(HasNumOnly||(RawValue=="true")||(RawValue=="false")||(RawValue=="null")))
         lRepresentation.append(RawValue);
     else{
         lRepresentation.push_back('"');
@@ -164,13 +171,27 @@ string Array::GetAsJSON(unsigned aStep){
     
     lRepresentation.push_back('[');
     
+    
     //lRepresentation.push_back('\n');
     
     std::list<Entry *>::iterator lIter = Contents.begin();
     while(lIter!=Contents.end()){
         //exit(1);
-        lRepresentation.append((*lIter)->GetAsJSON(aStep+1));
-        lRepresentation.push_back('\n');
+        string tr = (*lIter)->GetAsJSON(aStep+1);
+        if(tr.find('\n')!=string::npos){
+            lRepresentation.push_back('\n');
+            lRepresentation.append(tr);
+        }
+        else{
+            std::string::iterator eIter = tr.begin();
+            while(isspace(*eIter))
+                eIter++;
+            lRepresentation.push_back(' ');
+            lRepresentation.append(eIter, tr.end());
+            
+                
+        }
+        //lRepresentation.push_back('\n');
         lIter++;
     
     }
@@ -361,7 +382,7 @@ void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aR
     char lChar = aFrom->Get<uint8_t>();
     while((lChar!='{')&&(lChar!='['))
         lChar = aFrom->Get<uint8_t>();
-                
+    
     string lName;
     string lValue;
     enum {pNAME, pVALUE} lPart = pNAME;
@@ -403,10 +424,13 @@ void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aR
             }
             if(lType==tVALUE){
                 if(!lValue.empty()){
-                    lGroups.top()->Contents.push_back(new Value(lName, lValue, lGroups.top()));
+                        lGroups.top()->Contents.push_back(new Value(lName, lValue, lGroups.top()));
                 }
-                else{
-                    lGroups.top()->Contents.push_back(new Value("", lName, lGroups.top()));
+                else if(!lName.empty()){
+                    if(lGroups.top()->SupportsAnonVals())
+                        lGroups.top()->Contents.push_back(new Value("", lName, lGroups.top()));
+                    else
+                        lGroups.top()->Contents.push_back(new Value(lName, "", lGroups.top()));
                 }
             }
             lType = tNONE;
