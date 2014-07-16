@@ -218,7 +218,7 @@ namespace t5 {
             mFD = open(aPath, lFlags);
         }
         
-        ~FDFileSource(){
+        virtual ~FDFileSource(){
             close(mFD);
         }
         
@@ -256,6 +256,62 @@ namespace t5 {
             lseek(mFD, aTo, lWhence);
         }
         
+    };
+        
+    #include <cerrno>
+        
+    class mmapDataSource : public FDFileSource{
+    uint8_t *BufferData;
+    size_t BufferNeedle;
+    size_t BufferSize;
+    public:
+        mmapDataSource(int aAccess, const char *aPath)
+        : FDFileSource(aAccess,aPath)
+        , BufferData((uint8_t *)mmap(nullptr, Length(), 
+            (((aAccess&eRead)==eRead)?PROT_READ:0)|(((aAccess&eRead)==eWrite)?PROT_WRITE:0),
+            MAP_SHARED, mFD, 0))
+        , BufferNeedle(0)
+        , BufferSize(Length())
+        {
+
+        }
+        virtual ~mmapDataSource(){
+            munmap(BufferData, BufferSize);
+        }
+        
+        virtual void Seek(size_t aTo, int aWhence){
+            switch(aWhence){
+                case eStart:
+                BufferNeedle = aTo;
+                break;
+                case eEnd:
+                BufferNeedle = BufferSize - aTo;
+                break;
+                case eIndex:
+                BufferNeedle += aTo;
+                break;
+            }
+            
+        }
+    
+        virtual void Read(void *aTo, size_t aLen){
+            
+            if(BufferNeedle+aLen>BufferSize)
+                return;
+            
+            memcpy(aTo, BufferData+BufferNeedle, aLen);
+            BufferNeedle+=aLen;
+        }
+        
+        virtual char GetC(void){
+            BufferNeedle++;
+            return BufferData[BufferNeedle-1];
+        }
+        
+        virtual size_t Tell(){
+            return BufferNeedle;
+        }
+    
     };
     
     class PipeSource : public FDFileSource {
@@ -387,7 +443,7 @@ namespace t5 {
     
     DataSource* DataSource::FromPath(int aAccess, const char *aPath){
     #ifndef _WIN32
-        return new FDFileSource(aAccess, aPath);
+        return new mmapDataSource(aAccess, aPath);
     #else
         return new CFileSource(aAccess, aPath);    
     #endif

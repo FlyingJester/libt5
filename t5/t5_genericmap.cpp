@@ -371,7 +371,30 @@ void Group::ReadDataSourceINI(DataSource *aFrom , size_t aRangeStart, size_t aRa
     }
     
 }
-        
+
+inline void PullFromBuffer(std::string &aTo, char Buffer[80], size_t &aNum){
+    
+    if(aNum==0)
+        return;
+
+    aTo.append(Buffer);
+    memset(Buffer, 0, 80);
+    aNum = 0;
+}
+
+//void PushToBuffer(std::string &aDest, char Buffer[80], char aTo, size_t &aNum) __attribute__((noinline));
+
+inline void PushToBuffer(std::string &aDest, char Buffer[80], char aTo, size_t &aNum){
+    
+    if(aNum>78){
+        PullFromBuffer(aDest, Buffer, aNum);
+    }
+    //fprintf(stderr, "Writing up to %zu chars to the string.\n", aNum);
+    Buffer[aNum] = aTo;
+    aNum++;
+    
+}
+
 // Read the DataSource as a JSON config.
 void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aRangeLen){
     if(aRangeLen==0)
@@ -383,18 +406,27 @@ void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aR
     while((lChar!='{')&&(lChar!='['))
         lChar = aFrom->Get<uint8_t>();
     
-    string lName;
-    string lValue;
+    string lName;  lName.reserve(80);
+    string lValue; lValue.reserve(80);
     enum {pNAME, pVALUE} lPart = pNAME;
     enum {tVALUE, tARRAY, tGROUP, tNONE} lType = tNONE;
     enum {NONE, SINGLE, DOUBLE} quotes = NONE;
-    std::stack<Group *> lGroups = std::stack<Group *>();
+    std::stack<Group *, std::list<Group *> > lGroups = std::stack<Group *, std::list<Group *> >();
     lGroups.push(this);
     
+    char nBuffer[80];
+    char vBuffer[80];
+    
+    size_t nSize;
+    size_t vSize;
+    
+    //size_t sRangeLen = std::min<size_t> (1000u, aRangeLen);
+    
+    
     for(int i = 0; i<aRangeLen; i++){
-        char lChar = aFrom->Get<uint8_t>();
+        char lChar = aFrom->GetC();
         if(lGroups.empty()){ // We've pulled the last object off.
-            lGroups.push(this);
+            //lGroups.push(this);
         }
         if(lChar=='{'){
             lType = tGROUP;
@@ -406,6 +438,9 @@ void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aR
         
         if((lChar==',')||(lChar=='{')||(lChar=='[')||(lChar=='}')||(lChar==']')){
 
+            PullFromBuffer(lValue, vBuffer, vSize);
+            PullFromBuffer(lName,  nBuffer, nSize);
+            
             if(lType==tGROUP){
                 auto g = new Group(lName, lGroups.top());
                 lGroups.top()->Contents.push_back(g);
@@ -436,8 +471,10 @@ void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aR
             lType = tNONE;
             lPart = pNAME;
             
-            lName.clear();
-            lValue.clear();
+            lName.clear(); // lName = "";
+            lValue.clear();// lValue = "";
+            vSize = 0;
+            nSize = 0;
             if((lChar=='}')||(lChar==']')){
 
                 lGroups.pop();
@@ -450,12 +487,16 @@ void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aR
         if(lChar=='\\'){
             char nChar = aFrom->Get<uint8_t>();
             if(lPart == pNAME){
-                lName.push_back(lChar);
-                lName.push_back(nChar);
+                PushToBuffer(lName, nBuffer, lChar, nSize);
+                PushToBuffer(lName, nBuffer, nChar, nSize);
+                //lName.push_back(lChar);
+                //lName.push_back(nChar);
             }
             else if(lPart==pVALUE){
-                lValue.push_back(lChar);
-                lValue.push_back(nChar);
+                PushToBuffer(lValue, vBuffer, lChar, vSize);
+                PushToBuffer(lValue, vBuffer, nChar, vSize);
+                //lValue.push_back(lChar);
+                //lValue.push_back(nChar);
             }
             continue;
         }
@@ -489,9 +530,11 @@ void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aR
         
         if(quotes!=NONE){
             if(lPart == pNAME)
-                lName.push_back(lChar);
+                PushToBuffer(lName, nBuffer, lChar, nSize);
+                //lName.push_back(lChar);
             else if(lPart==pVALUE)
-                lValue.push_back(lChar);
+                PushToBuffer(lValue, vBuffer, lChar, vSize);
+                //lValue.push_back(lChar);
                 
             continue;
         }
@@ -504,9 +547,11 @@ void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aR
         }
 
         if(lPart == pNAME)
-            lName.push_back(lChar);
+            PushToBuffer(lName, nBuffer, lChar, nSize);
+            //lName.push_back(lChar);
         else if(lPart==pVALUE)
-            lValue.push_back(lChar);
+            PushToBuffer(lValue, vBuffer, lChar, vSize);
+            //lValue.push_back(lChar);
     
         
         

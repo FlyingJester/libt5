@@ -83,6 +83,11 @@ public:
         Write(&a, sizeof(T));
         return sizeof(T);
     }
+    
+    virtual char GetC(void){
+        return Get<char>();
+    }
+    
 
 };
 

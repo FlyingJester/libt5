@@ -25,6 +25,10 @@ namespace map{
         virtual string GetAsINI(unsigned aStep) = 0;
         virtual string GetAsJSON(unsigned aStep) = 0;
         
+        virtual inline bool SupportsAnonVals(){
+            return false;
+        }
+        
     };
     
     class Group : public Entry {
@@ -115,15 +119,16 @@ namespace map{
     
     };
     
-    class Array : public Entry {
+    class Array : public Group {
     public:
 
-        Array(string &name, string value, Group *group);
+        Array(string &name, Group *group);
         virtual string GetAsINI(unsigned aStep);
         virtual string GetAsJSON(unsigned aStep);
         
-        std::list<Entry *> Contents;
-    
+        virtual inline bool SupportsAnonVals(){
+            return true;
+        }
     };
     
     class Value : public Entry{
