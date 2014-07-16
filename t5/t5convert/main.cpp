@@ -135,16 +135,7 @@ int rmain(int argc, const char * argv[]){
     }
     
     
-    //StdOut->WriteS((std::string("Writing to file ") + OutputFile + std::string("\n")).c_str());
-    
-    
-    
-    delete rGroup;
-    delete ConfSource;
-    delete ConfDestin;
-    
-    return 0;
-    
+    StdOut->WriteS((std::string("Writing to file ") + OutputFile + std::string("\n")).c_str());
     
     
     switch(OutType){
@@ -159,16 +150,6 @@ int rmain(int argc, const char * argv[]){
         case Group::nullConfig:
         break;
     }
-    
-    
-    //        rGroup->WriteINI(StdOut);
-    //StdOut->Put('\n');
-
-    //        rGroup->WriteJSON(StdOut);
-            
-    //StdOut->Put('\n');
-    
-    //StdOut->WriteS("Landed.\n");
     
     delete rGroup;
     delete ConfSource;
