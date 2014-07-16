@@ -1,0 +1,11 @@
+import os
+import sys
+import glob
+
+Import("globalenv IsLinux IsWindows IsDarwin LibraryInstall compiler builddir")
+
+libt5 = globalenv.SharedLibrary("t5", glob.glob("*.cpp"))
+
+LibraryInstall(builddir, libt5, globalenv)
+
+Return("libt5")
