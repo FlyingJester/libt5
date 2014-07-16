@@ -1,0 +1,13 @@
+branches:
+  only:
+    - master
+
+compiler:
+  - clang
+  - gcc
+
+before_script:
+  scons -c
+
+script
+  scons

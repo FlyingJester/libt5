@@ -9,16 +9,29 @@ namespace map{
 
 Entry::Entry(const string &aName, Group * aParent){
     Parent = aParent;
+    
+    
+    //if(aName.empty()){
+    //    Name = std::string("");
+    //    return;
+    //}
+    
     std::string::const_iterator lIterf = aName.begin();
     
-    while(isspace(*lIterf))
+    while( (lIterf!=aName.end()) && (isspace(*lIterf) || (!isgraph(*lIterf)) ) ){
+    //while((isspace(*lIterf) )&& (lIterf!=aName.end())){
+    //while(isspace(*lIterf)){
         lIterf++;
-        
+    
+    }
     std::string::const_reverse_iterator lIterr = aName.rbegin();
     
-    while(isspace(*lIterr))
+    //while(isspace(*lIterr)){
+    while( (lIterr!=aName.rend()) && (isspace(*lIterr) || (!isgraph(*lIterr)) ) ){
         lIterr++;
+    }
     
+    //Name = std::string(aName);
     Name = std::string(lIterf, lIterr.base());
     
 }
@@ -197,7 +210,7 @@ string Array::GetAsJSON(unsigned aStep){
     }
     
     lRepresentation.append(aStep*2, ' ');
-    lRepresentation.append("],\n");
+    lRepresentation.append("],");
     return lRepresentation;
 /*
     
@@ -386,7 +399,7 @@ inline void PullFromBuffer(std::string &aTo, char Buffer[80], size_t &aNum){
 
 inline void PushToBuffer(std::string &aDest, char Buffer[80], char aTo, size_t &aNum){
     
-    if(aNum>78){
+    if(aNum>79){
         PullFromBuffer(aDest, Buffer, aNum);
     }
     //fprintf(stderr, "Writing up to %zu chars to the string.\n", aNum);
@@ -406,8 +419,8 @@ void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aR
     while((lChar!='{')&&(lChar!='['))
         lChar = aFrom->Get<uint8_t>();
     
-    string lName;  lName.reserve(80);
-    string lValue; lValue.reserve(80);
+    string lName;
+    string lValue;
     enum {pNAME, pVALUE} lPart = pNAME;
     enum {tVALUE, tARRAY, tGROUP, tNONE} lType = tNONE;
     enum {NONE, SINGLE, DOUBLE} quotes = NONE;
@@ -417,8 +430,8 @@ void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aR
     char nBuffer[80];
     char vBuffer[80];
     
-    size_t nSize;
-    size_t vSize;
+    size_t nSize = 0;
+    size_t vSize = 0;
     
     //size_t sRangeLen = std::min<size_t> (1000u, aRangeLen);
     

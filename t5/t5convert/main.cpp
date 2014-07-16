@@ -20,7 +20,7 @@ t5::DataSource *OutSource = t5::DataSource::FromCFileHandle(stdout);
 t5::DataSourcePusher *StdOut = OutSource->AsPusher();
 
 inline int BadUsage(){
-    StdOut->WriteS("\tUsage: -i [--ini|--json] [file] [-o [--ini|--json] [output]]\n");
+    StdOut->WriteS("\tUsage: -i [--ini|--json] [file] [-o [--ini|--json|--test] [output]]\n");
     return EXIT_SUCCESS;
 }
 
@@ -29,9 +29,9 @@ inline int PrintHelp(){
     return EXIT_SUCCESS;
 }
 
-int main(int argc, const char * argv[]){
+int rmain(int argc, const char * argv[]){
 
-    StdOut->WriteS("T5 Convert - Convert between JSON and INI files.\n");
+    //StdOut->WriteS("T5 Convert - Convert between JSON and INI files.\n");
     
     for(int i = 0; i<argc; i++){
         std::string opt = argv[i];
@@ -45,10 +45,10 @@ int main(int argc, const char * argv[]){
             "t5convert",
             "-i",
             "--json",
-            "/Users/mozilla/Desktop/conf09.json",
+            "/Users/mozilla/Desktop/apache_builds.json",
             "-o",
             "--json",
-            "/Users/mozilla/Desktop/conf12.json"
+            "/Users/mozilla/Desktop/apache_builds.t5.json"
         };
         
         argc = 7;
@@ -121,21 +121,31 @@ int main(int argc, const char * argv[]){
     
     switch (InType){
         case Group::nullConfig:
-        StdOut->WriteS("Guessing config.\n");
+        //StdOut->WriteS("Guessing config.\n");
             rGroup->ReadDataSource(ConfSource);
         break;
         case Group::iniConfig:
-        StdOut->WriteS("Reading INI.\n");
+        //StdOut->WriteS("Reading INI.\n");
             rGroup->ReadDataSourceINI(ConfSource);
         break;
         case Group::jsonConfig:
-        StdOut->WriteS("Reading JSON.\n");
+        //StdOut->WriteS("Reading JSON.\n");
             rGroup->ReadDataSourceJSON(ConfSource);
         break;
     }
     
     
-    StdOut->WriteS((std::string("Writing to file ") + OutputFile + std::string("\n")).c_str());
+    //StdOut->WriteS((std::string("Writing to file ") + OutputFile + std::string("\n")).c_str());
+    
+    
+    
+    delete rGroup;
+    delete ConfSource;
+    delete ConfDestin;
+    
+    return 0;
+    
+    
     
     switch(OutType){
         case Group::iniConfig:
@@ -146,18 +156,30 @@ int main(int argc, const char * argv[]){
             StdOut->WriteS("Writing JSON.\n");
             rGroup->WriteJSON(ConfDestin);
         break;
+        case Group::nullConfig:
+        break;
     }
     
     
-            rGroup->WriteINI(StdOut);
-    StdOut->Put('\n');
+    //        rGroup->WriteINI(StdOut);
+    //StdOut->Put('\n');
 
-            rGroup->WriteJSON(StdOut);
+    //        rGroup->WriteJSON(StdOut);
             
-    StdOut->Put('\n');
+    //StdOut->Put('\n');
     
-    StdOut->WriteS("Landed.\n");
+    //StdOut->WriteS("Landed.\n");
     
+    delete rGroup;
+    delete ConfSource;
+    delete ConfDestin;
+    
+    return 0;
     
 }
 
+int main(int argc, const char * argv[]){
+    for(int i = 0; i<100; i++){
+        rmain(argc, argv);
+    }
+}
