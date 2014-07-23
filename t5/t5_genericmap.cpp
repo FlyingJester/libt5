@@ -777,8 +777,65 @@ Group::ConfigType Group::AnalyzeDataSource(DataSource *aFrom , size_t aRangeStar
     
     return Group::ConfigType::nullConfig;
 }
+
+
+template <typename tContainerType, typename tPredType>
+  typename tContainerType::iterator FindIn(tContainerType aContainer, tPredType aPred) {return std::find_if(aContainer.begin(), aContainer.end(), aPred);}
         
-        
+bool Group::GetBool(const char *aName, bool aDefault){
+    
+    auto lElement = FindIn(Contents, 
+    [&] (const t5::map::Entry *aIter) { return (aIter)->Name == std::string(aName); });
+    if(lElement!=Contents.end()){
+        Value *lName = (*lElement)->AsValue();
+        if(lName!=nullptr)
+            return lName->ToBool();
+    }
+    
+    
+    return aDefault;
+}
+int Group::GetInt(const char *aName, int aDefault){
+
+    auto lElement = FindIn(Contents, 
+    [&] (const t5::map::Entry *aIter) { return (aIter)->Name == std::string(aName); });
+    
+    if(lElement!=Contents.end()){
+        Value *lName = (*lElement)->AsValue();
+        if(lName!=nullptr)
+            return lName->ToInt();
+    }
+    
+    return aDefault;
+}
+double Group::GetDouble(const char *aName, double aDefault){
+
+    auto lElement = FindIn(Contents, 
+    [&] (const t5::map::Entry *aIter) { return (aIter)->Name == std::string(aName); });
+    
+    if(lElement!=Contents.end()){
+        Value *lName = (*lElement)->AsValue();
+        if(lName!=nullptr)
+            return lName->ToDouble();
+    }
+    
+    return aDefault;
+}
+
+const char * Group::GetString(const char *aName){
+
+    auto lElement = FindIn(Contents, 
+    [&] (const t5::map::Entry *aIter) { return (aIter)->Name == std::string(aName); });
+       
+    if(lElement!=Contents.end()){
+        Value *lName = (*lElement)->AsValue();
+        if(lName!=nullptr)
+            return lName->RawValue.c_str();
+    }
+    
+    return nullptr;
+}
+
 
 
 }

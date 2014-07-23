@@ -124,6 +124,11 @@ namespace map{
         virtual Group *AsGroup(){return this;};
         virtual Value *AsValue(){return nullptr;}
 
+        virtual bool GetBool(const char *aName, bool aDefault);
+        virtual int GetInt(const char *aName, int aDefault);
+        virtual double GetDouble(const char *aName, double aDefault);
+        virtual const char * GetString(const char *aName); //String returned is owned by the element it is from.
+
     };
 
     class Array : public Group {
