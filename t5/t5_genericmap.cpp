@@ -3,13 +3,21 @@
 #include <cassert>
 #include <cctype>
 #include <stack>
+#include <memory>
+
+t5::DataSource *OutSource = t5::DataSource::FromCFileHandle(stdout);
+t5::DataSourcePusher *StdOut = OutSource->AsPusher();
 
 namespace t5 {
 namespace map{
 
+
+Entry::Entry(Group *aParent){
+    Parent = aParent;
+}
+
 Entry::Entry(const string &aName, Group * aParent){
     Parent = aParent;
-    
     
     //if(aName.empty()){
     //    Name = std::string("");
@@ -409,18 +417,16 @@ inline void PushToBuffer(std::string &aDest, char Buffer[80], char aTo, size_t &
 }
 
 // Read the DataSource as a JSON config.
-void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aRangeLen){
+void Group::ReadDataSourceJSON(DataSource * aFrom , size_t aRangeStart, size_t aRangeLen){
     if(aRangeLen==0)
         aRangeLen = aFrom->Length() - aRangeStart;
     
     aFrom->Seek(aRangeStart, DataSource::eStart);
 
-    char lChar = aFrom->Get<uint8_t>();
-    while((lChar!='{')&&(lChar!='['))
-        lChar = aFrom->Get<uint8_t>();
-    
     string lName;
     string lValue;
+    lName.reserve(120);
+    lValue.reserve(120);
     enum {pNAME, pVALUE} lPart = pNAME;
     enum {tVALUE, tARRAY, tGROUP, tNONE} lType = tNONE;
     enum {NONE, SINGLE, DOUBLE} quotes = NONE;
@@ -434,23 +440,32 @@ void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aR
     size_t vSize = 0;
     
     //size_t sRangeLen = std::min<size_t> (1000u, aRangeLen);
+    static char *lBuffer = nullptr;
+    lBuffer = (char *)realloc(lBuffer, aRangeLen);
+    aFrom->Read(lBuffer, aRangeLen);
     
+    const char * const cBuffer = lBuffer;
     
-    for(int i = 0; i<aRangeLen; i++){
-        char lChar = aFrom->GetC();
-        if(lGroups.empty()){ // We've pulled the last object off.
-            //lGroups.push(this);
-        }
-        if(lChar=='{'){
-            lType = tGROUP;
-        }
-        
-        if(lChar=='['){
-            lType = tARRAY;
-        }
+    //StdOut->WriteS("Reading:\n");
+    //StdOut->WriteS(lBuffer);
+    //StdOut->WriteS("\n");
+    int i = 0;
+    while((cBuffer[i]=='{') || (cBuffer[i] == '[') || isspace(cBuffer[i]))
+        i++; 
+    
+    for(; i<aRangeLen; i++){
+        const char lChar = cBuffer[i];
+
         
         if((lChar==',')||(lChar=='{')||(lChar=='[')||(lChar=='}')||(lChar==']')){
-
+            if(lChar=='{'){
+                lType = tGROUP;
+            }
+                
+            if(lChar=='['){
+                lType = tARRAY;
+            }
+            
             PullFromBuffer(lValue, vBuffer, vSize);
             PullFromBuffer(lName,  nBuffer, nSize);
             
@@ -458,27 +473,23 @@ void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aR
                 auto g = new Group(lName, lGroups.top());
                 lGroups.top()->Contents.push_back(g);
                 lGroups.push(g);
-                //lGroups.push(new Group(lName, lGroups.top()));
-                //lGroups.top()->Contents.push_back(lGroups.top());
-                //Contents.push_back(lGroups.top());
             }     
             if(lType==tARRAY){
                 auto a = new Array(lName, lGroups.top());
                 lGroups.top()->Contents.push_back(a);
                 lGroups.push(a);
-                //lGroups.push(new Array(lName, lGroups.top()));
-                //lGroups.top()->Contents.push_back(lGroups.top());
-                //Contents.push_back(lGroups.top());
             }
             if(lType==tVALUE){
                 if(!lValue.empty()){
                         lGroups.top()->Contents.push_back(new Value(lName, lValue, lGroups.top()));
                 }
                 else if(!lName.empty()){
-                    if(lGroups.top()->SupportsAnonVals())
+                    if(lGroups.top()->SupportsAnonVals()){
                         lGroups.top()->Contents.push_back(new Value("", lName, lGroups.top()));
-                    else
+                    }
+                    else{
                         lGroups.top()->Contents.push_back(new Value(lName, "", lGroups.top()));
+                    }
                 }
             }
             lType = tNONE;
@@ -486,10 +497,11 @@ void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aR
             
             lName.clear(); // lName = "";
             lValue.clear();// lValue = "";
+            lName.reserve(120);
+            lValue.reserve(120);
             vSize = 0;
             nSize = 0;
             if((lChar=='}')||(lChar==']')){
-
                 lGroups.pop();
             }
             continue;
@@ -498,7 +510,9 @@ void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aR
         lType = tVALUE;
         
         if(lChar=='\\'){
-            char nChar = aFrom->Get<uint8_t>();
+            if(++i>=aRangeLen)
+                break;
+            const char nChar = cBuffer[i];
             if(lPart == pNAME){
                 PushToBuffer(lName, nBuffer, lChar, nSize);
                 PushToBuffer(lName, nBuffer, nChar, nSize);
@@ -561,17 +575,12 @@ void Group::ReadDataSourceJSON(DataSource *aFrom , size_t aRangeStart, size_t aR
 
         if(lPart == pNAME)
             PushToBuffer(lName, nBuffer, lChar, nSize);
-            //lName.push_back(lChar);
         else if(lPart==pVALUE)
             PushToBuffer(lValue, vBuffer, lChar, vSize);
-            //lValue.push_back(lChar);
     
         
         
     }
-    
-    //Contents.erase(Contents.end());
-    
 }
         
 /////

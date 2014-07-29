@@ -7,9 +7,10 @@ msvc_ccflags = "/O2 /EHsc /Zi"
 msvc_cflags = ""
 msvc_cxxflags = ""
 
-gcc_ccflags = " -Werror=return-type -Wall -Wno-pointer-arith -mtune=native -O3 -pipe -Wcast-align -g"
+gcc_ccflags = " -Werror=return-type -Wall -Wno-pointer-arith -mtune=native -O3 -pipe -Wcast-align -g "
 gcc_cflags = " -std=c11 "
 gcc_cxxflags = " -std=c++11 "
+gcc_ldflags  = " "
 
 if os.environ.get('TRAVIS') == 'true':
   gcc_cflags = " -std=c99 "
@@ -18,6 +19,7 @@ if os.environ.get('TRAVIS') == 'true':
 clang_ccflags = gcc_ccflags + " -DHAS_UNISTD -DHAS_STAT_SYS -DUSE_STAT -Wno-return-type-c-linkage -Wno-null-arithmetic  "
 clang_cflags = gcc_cflags
 clang_cxxflags = gcc_cxxflags
+clang_ldflags = gcc_ldflags
 
 #Checking platform.
 
@@ -57,9 +59,9 @@ if os.name == 'posix':
 if compiler == 'msvc':
   globalenv.Replace(CCFLAGS = msvc_ccflags, CFLAGS = msvc_cflags, CXXFLAGS = msvc_cxxflags)
 if compiler == 'gcc':
-  globalenv.Replace(CCFLAGS = gcc_ccflags, CFLAGS = gcc_cflags, CXXFLAGS = gcc_cxxflags)
+  globalenv.Replace(CCFLAGS = gcc_ccflags, CFLAGS = gcc_cflags, CXXFLAGS = gcc_cxxflags, LINKFLAGS = gcc_ldflags)
 if compiler == 'clang':
-  globalenv.Replace(CCFLAGS = clang_ccflags, CFLAGS = clang_cflags, CXXFLAGS = clang_cxxflags)
+  globalenv.Replace(CCFLAGS = clang_ccflags, CFLAGS = clang_cflags, CXXFLAGS = clang_cxxflags, LINKFLAGS = clang_ldflags)
 
 globalenv.Append(CPPPATH = [ os.path.join(os.getcwd(), "t5")])
 

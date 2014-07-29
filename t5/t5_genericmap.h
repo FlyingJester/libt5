@@ -17,10 +17,30 @@ namespace map{
     class Entry {
     public:
         Entry(const string&, Group *);
+        Entry(Group *);
         virtual ~Entry();
         string Name;
         Group *Parent;
 
+        template <typename T>
+        void SetName(T lIterf, T lIterr, const T &lEnd) {
+            while( (lIterf!=lEnd) && (isspace(*lIterf) || (!isgraph(*lIterf)) ) )
+               lIterf++;
+            while( (lIterr!=lEnd) && (isspace(*lIterr) || (!isgraph(*lIterr)) ) )
+                lIterr--;
+            Name = std::string(lIterf, lIterr);
+        }
+        
+        template <typename T>
+        void SetName(T lIterf, const T &lEnd) {
+            T e = lEnd;
+            while( (lIterf!=lEnd) && (isspace(*lIterf) || (!isgraph(*lIterf)) ) )
+               lIterf++;
+            while( (e!=lEnd) && (isspace(*e) || (!isgraph(*e)) ) )
+                e--;
+            Name = std::string(lIterf, e);       
+            
+        }
         ////
         // Get the string representation of this in each format.
         virtual string GetAsINI(unsigned aStep) = 0;
@@ -41,6 +61,8 @@ namespace map{
         Group(const string &aName, Group *group)
           : Entry(aName, group){
         }
+        Group(Group *group)
+         : Entry(group){}
 
         Group(const string &lName, const string &lFrom, Group *group);
 
@@ -135,6 +157,8 @@ namespace map{
     public:
 
         Array(string &name, Group *group);
+        Array(Group *group)
+         : Group(group){}
         virtual string GetAsINI(unsigned aStep);
         virtual string GetAsJSON(unsigned aStep);
 
@@ -150,6 +174,9 @@ namespace map{
           : Entry(name, group)
           , RawValue(value)
         {}
+        
+        Value(Group *group)
+         : Entry(group){}
 
         virtual int     ToInt();
         virtual double  ToDouble();

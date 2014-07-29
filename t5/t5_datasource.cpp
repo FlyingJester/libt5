@@ -443,7 +443,7 @@ namespace t5 {
     
     DataSource* DataSource::FromPath(int aAccess, const char *aPath){
     #ifndef _WIN32
-        return new mmapDataSource(aAccess, aPath);
+        return new FDFileSource(aAccess, aPath);
     #else
         return new CFileSource(aAccess, aPath);    
     #endif

@@ -133,19 +133,24 @@ int rmain(int argc, const char * argv[]){
             rGroup->ReadDataSourceJSON(ConfSource);
         break;
     }
+      /*  
+    delete rGroup;
+    delete ConfSource;
+    delete ConfDestin;
     
-    
-    StdOut->WriteS((std::string("Writing to file ") + OutputFile + std::string("\n")).c_str());
+    return 0;
+    */
+   // StdOut->WriteS((std::string("Writing to file ") + OutputFile + std::string("\n")).c_str());
     
     
     switch(OutType){
         case Group::iniConfig:
             StdOut->WriteS("Writing INI.\n");
-            rGroup->WriteINI(ConfDestin);
+            //rGroup->WriteINI(ConfDestin);
         break;
         case Group::jsonConfig:
             StdOut->WriteS("Writing JSON.\n");
-            rGroup->WriteJSON(ConfDestin);
+            //rGroup->WriteJSON(ConfDestin);
         break;
         case Group::nullConfig:
         break;
