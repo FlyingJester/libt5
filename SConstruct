@@ -59,9 +59,31 @@ if os.name == 'posix':
 if compiler == 'msvc':
   globalenv.Replace(CCFLAGS = msvc_ccflags, CFLAGS = msvc_cflags, CXXFLAGS = msvc_cxxflags)
 if compiler == 'gcc':
-  globalenv.Replace(CCFLAGS = gcc_ccflags, CFLAGS = gcc_cflags, CXXFLAGS = gcc_cxxflags, LINKFLAGS = gcc_ldflags, CPPDEFINES = ['HAS_STAT'])
+  globalenv.Replace(CCFLAGS = gcc_ccflags, CFLAGS = gcc_cflags, CXXFLAGS = gcc_cxxflags, LINKFLAGS = gcc_ldflags)
 if compiler == 'clang':
-  globalenv.Replace(CCFLAGS = clang_ccflags, CFLAGS = clang_cflags, CXXFLAGS = clang_cxxflags, LINKFLAGS = clang_ldflags, CPPDEFINES = ['HAS_SYS_STAT'])
+  globalenv.Replace(CCFLAGS = clang_ccflags, CFLAGS = clang_cflags, CXXFLAGS = clang_cxxflags, LINKFLAGS = clang_ldflags)
+
+def CheckForHeader(env, conf, header_name, macro_name):
+  if conf.CheckCHeader(header_name) or conf.CheckCXXHeader(header_name):
+    env.Append(CPPDEFINES = macro_name)
+    return True
+  return False
+
+# Linux requires we check if the include files are in X/Open or SysV locations.
+conf = Configure(globalenv.Clone())
+if IsLinux():
+  CheckForHeader(globalenv, conf, 'mutex', "HAS_MUTEX")
+  CheckForHeader(globalenv, conf, 'unistd.h', "HAS_UNISTD")
+  CheckForHeader(globalenv, conf, 'sys/unistd.h', "HAS_UNISTD_SYS")
+  if CheckForHeader(globalenv, conf, 'stat.h', "HAS_STAT") or CheckForHeader(globalenv, conf, 'sys/stat.h', "HAS_STAT_SYS"):
+    globalenv.Append(CPPDEFINES = "USE_STAT")
+  CheckForHeader(globalenv, conf, 'types', "HAS_TYPES")
+  CheckForHeader(globalenv, conf, 'sys/types', "HAS_TYPES_SYS")
+
+conf.Finish()
+
+if IsDarwin():
+  globalenv.Append(CPPDEFINES = ["HAS_STAT_SYS"])
 
 globalenv.Append(CPPPATH = [ os.path.join(os.getcwd(), "t5")])
 
