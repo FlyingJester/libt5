@@ -59,9 +59,9 @@ if os.name == 'posix':
 if compiler == 'msvc':
   globalenv.Replace(CCFLAGS = msvc_ccflags, CFLAGS = msvc_cflags, CXXFLAGS = msvc_cxxflags)
 if compiler == 'gcc':
-  globalenv.Replace(CCFLAGS = gcc_ccflags, CFLAGS = gcc_cflags, CXXFLAGS = gcc_cxxflags, LINKFLAGS = gcc_ldflags)
+  globalenv.Replace(CCFLAGS = gcc_ccflags, CFLAGS = gcc_cflags, CXXFLAGS = gcc_cxxflags, LINKFLAGS = gcc_ldflags, CPPDEFINES = ['HAS_STAT'])
 if compiler == 'clang':
-  globalenv.Replace(CCFLAGS = clang_ccflags, CFLAGS = clang_cflags, CXXFLAGS = clang_cxxflags, LINKFLAGS = clang_ldflags)
+  globalenv.Replace(CCFLAGS = clang_ccflags, CFLAGS = clang_cflags, CXXFLAGS = clang_cxxflags, LINKFLAGS = clang_ldflags, CPPDEFINES = ['HAS_SYS_STAT'])
 
 globalenv.Append(CPPPATH = [ os.path.join(os.getcwd(), "t5")])
 
