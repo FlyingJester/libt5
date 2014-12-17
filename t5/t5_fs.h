@@ -1,5 +1,7 @@
 #pragma once
 #include <string>
+#include <memory>
+#include <list>
 
 namespace t5 {
 
@@ -26,23 +28,30 @@ namespace fs {
 
     class Entry {
     protected:
-        EntryGuts *Eguts;
-        Directory *mParent;
+        std::shared_ptr<EntryGuts> Eguts;
+        std::shared_ptr<Directory> mParent;
         std::string mName;
+        Entry(const std::string &path);
     public:
 
         class EntryIterator {
-            Entry *mSelf;
         public:
+            std::list<Entry *>::iterator mSelf;
+
             EntryIterator();
             ~EntryIterator();
-            void operator++();
-            Entry *operator*();
+            EntryIterator &operator+(int i);
+            EntryIterator &operator++();
+            EntryIterator &operator--();
+            EntryIterator &operator=(const EntryIterator &rValue);
+            Entry &operator*();
+            Entry *operator->();
             bool operator!=(const EntryIterator &rValue);
+            bool operator==(const EntryIterator &rValue);
         };
 
         Directory *Parent() const{
-            return mParent;
+            return mParent.get();
         }
 
         const std::string &Name() const{
@@ -52,15 +61,13 @@ namespace fs {
         Entry();
         virtual ~Entry();
 
-        virtual void Flush(void) = 0;
-
-        static Entry* FromPath();
+        static Entry* FromPath(const std::string &aPath);
 
         // An entry can work as a file, a directory, both or neither.
-        File *AsFile();
-        Directory* AsDirectory();
+        virtual File *AsFile() {return nullptr;}
+        virtual Directory* AsDirectory() {return nullptr;}
 
-        virtual const std::string &GetPath(); //Returns the path representation of the entry.
+        virtual const std::string &GetPath() const; //Returns the path representation of the entry.
 
     };
 
@@ -71,17 +78,20 @@ namespace fs {
     //
     class Directory : public Entry {
     protected:
-        DirectoryGuts *Dguts;
+        std::shared_ptr<DirectoryGuts> Dguts;
 
     public:
 
-        typedef EntryIterator iterator;
+        typedef Entry::EntryIterator iterator;
 
     private:
 
     protected:
+        Directory(const std::string &path);
 
     public:
+
+        friend class Entry;
 
         iterator begin(void);
         iterator end(void);
@@ -89,10 +99,20 @@ namespace fs {
         Directory();
         virtual ~Directory();
 
+        Directory* AsDirectory() override {return this;}
     };
 
     class File : public Entry {
+
+        File(const std::string &path);
+    public:
+
+        friend class Entry;
+
+        File(){}
+        virtual ~File(){}
         DataSource *AsSource();
+        virtual File *AsFile() {return this;}
     };
 
 
