@@ -89,7 +89,6 @@ namespace fs {
         Directory();
         virtual ~Directory();
 
-
     };
 
     class File : public Entry {

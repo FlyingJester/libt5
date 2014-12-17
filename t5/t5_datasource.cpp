@@ -334,8 +334,8 @@ namespace t5 {
 
         }
 
-        virtual void Write(void *aTo, size_t aLen){
-            write(mFDs[FD_IN], aTo, aLen);
+        virtual void Write(const void *aFrom, size_t aLen){
+            write(mFDs[FD_IN], aFrom, aLen);
         }
 
     };

@@ -20,7 +20,7 @@ public:
         eNewOnly    = 1<<3,
         eAppend     = 1<<4,
     };
-    
+
     enum {
         eStart,
         eEnd,
@@ -40,54 +40,54 @@ public:
     static DataSource *PullerFromSource(DataSource *aFrom);
     // Creates a data source with a dataconverter from source. Note that most converters only work one way.
     static DataSource *ConverterFromSource(DataSource *aFrom, DataConverter *aUsing);
-        
+
     // Create a pusher or puller based on this data source.
     DataSourcePusher *AsPusher();
     DataSourcePuller *AsPuller();
-        
+
     #ifdef USE_ZLIB
     static DataSource *CreateZlib(DataSource *aFrom);
     #endif
-    
+
 protected:
-    
+
     int mAccess;
-    
+
 public:
     virtual ~DataSource();
     DataSource(int aAccess);
-    
-    virtual void Read(void *aTo, size_t aLen) = 0;   
+
+    virtual void Read(void *aTo, size_t aLen) = 0;
 
     inline void WriteS(const char *aString){
         Write(aString, strlen(aString));
     }
-    
-    virtual void Write(const void *aTo, size_t aLen) = 0;
-    
 
-    
+    virtual void Write(const void *aTo, size_t aLen) = 0;
+
+
+
     virtual size_t Tell() = 0;
     virtual size_t Length() = 0;
     virtual void Seek(size_t aTo, int aWhence) = 0;
-    
+
     template<typename T>
     T Get(void){
         T rData;
         Read(&rData, sizeof(rData));
         return rData;
     }
-    
+
     template<typename T>
     size_t Put(T a){
         Write(&a, sizeof(T));
         return sizeof(T);
     }
-    
+
     virtual char GetC(void){
         return Get<char>();
     }
-    
+
 
 };
 
@@ -97,7 +97,7 @@ protected:
 public:
     virtual ~DataSourcePassThrough() {}
     DataSourcePassThrough(DataSource *aThrough);
-    
+
     virtual void Read(void *aTo, size_t aLen);
     virtual void Write(const void *aTo, size_t aLen);
     virtual size_t Tell();
@@ -109,7 +109,7 @@ class DataSourcePusher : public DataSourcePassThrough {
 public:
     virtual ~DataSourcePusher() {}
     DataSourcePusher(DataSource *aPushTo);
-    
+
     virtual void Read(void *aTo, size_t aLen);
     virtual size_t Tell();
     virtual size_t Length();
@@ -120,7 +120,7 @@ class DataSourcePuller : public DataSourcePassThrough {
 public:
     virtual ~DataSourcePuller() {}
     DataSourcePuller(DataSource *aPullFrom);
-    
+
     virtual void Write(const void *aTo, size_t aLen);
     virtual size_t Tell();
     virtual size_t Length();
@@ -138,7 +138,7 @@ public:
     virtual void Write(DataSource *aDataIn, size_t aLen) = 0;
     virtual void Process(void) = 0;
     virtual size_t size(void);
-    
+
 };
 
 }

@@ -806,16 +806,15 @@ bool Group::GetBool(const char *aName, bool aDefault){
 }
 int Group::GetInt(const char *aName, int aDefault){
 
-    auto lElement = FindIn(Contents,
-    [&] (const t5::map::Entry *aIter) { return (aIter)->Name == std::string(aName); });
+    const std::string sName = aName;
+    int R;
 
-    if(lElement!=Contents.end()){
-        Value *lName = (*lElement)->AsValue();
-        if(lName!=nullptr)
-            return lName->ToInt();
-    }
+    auto comparator = [&](t5::map::Entry *aIter){if (aIter->Name==sName) R = aIter->AsValue()->ToInt();};
 
-    return aDefault;
+    std::for_each(Contents.begin(), Contents.end(), comparator);
+
+    return R;
+
 }
 double Group::GetDouble(const char *aName, double aDefault){
 
