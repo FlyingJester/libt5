@@ -157,20 +157,20 @@ namespace fs {
         return *this;
     }
 
-    Entry *Entry::EntryIterator::operator->(){
+    Entry *Entry::EntryIterator::operator->() const{
         return *mSelf;
     }
 
-    Entry &Entry::EntryIterator::operator*(){
+    Entry &Entry::EntryIterator::operator*() const{
         return **mSelf;
     }
 
-    bool Entry::EntryIterator::operator!=(const EntryIterator &rValue){
-        return (*mSelf)->GetPath()!=const_cast<EntryIterator &>(rValue)->GetPath();
+    bool Entry::EntryIterator::operator!=(const EntryIterator &rValue) const{
+        return mSelf!=rValue.mSelf;
     }
 
-    bool Entry::EntryIterator::operator==(const EntryIterator &rValue){
-        return (*mSelf)->GetPath()==const_cast<EntryIterator &>(rValue)->GetPath();
+    bool Entry::EntryIterator::operator==(const EntryIterator &rValue) const{
+        return mSelf==rValue.mSelf;
     }
 
 

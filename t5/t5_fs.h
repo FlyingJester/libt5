@@ -44,10 +44,10 @@ namespace fs {
             EntryIterator &operator++();
             EntryIterator &operator--();
             EntryIterator &operator=(const EntryIterator &rValue);
-            Entry &operator*();
-            Entry *operator->();
-            bool operator!=(const EntryIterator &rValue);
-            bool operator==(const EntryIterator &rValue);
+            Entry &operator*() const;
+            Entry *operator->() const;
+            bool operator!=(const EntryIterator &rValue) const;
+            bool operator==(const EntryIterator &rValue) const;
         };
 
         Directory *Parent() const{
@@ -99,7 +99,7 @@ namespace fs {
         Directory();
         virtual ~Directory();
 
-        Directory* AsDirectory() override {return this;}
+        virtual Directory* AsDirectory() {return this;}
     };
 
     class File : public Entry {
