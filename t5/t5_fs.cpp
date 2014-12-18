@@ -55,47 +55,67 @@ namespace fs {
 
     }
 
+    inline bool NotSystemLink(const std::string &file_name){
+        for(std::string::const_iterator iter = file_name.cbegin(); iter!=file_name.cend(); iter++){
+            if((*iter!='.') && (*iter!='/')
+#ifdef _WIN32
+            && (*iter!='\\')
+#endif
+            ){
+                return true;
+            }
+        }
+        return false;
+    }
+
     Directory::Directory(const std::string &path)
       : Entry(path) {
         Dguts.reset(new DirectoryGuts);
 
         assert(t5::IsDir(path.c_str()));
 
+        { //ensures no platform-specific variables leak out.
 #ifdef _WIN32
 
+            WIN32_FIND_DATA dirp;
+            HANDLE dirent_h = FindFirstFile((path+"\\*").c_str(), &dirp);
 
-#else
+            while((GetLastError()!=ERROR_FILE_NOT_FOUND) && (GetLastError()!=ERROR_NO_MORE_FILE)){
+                if(!FindNextFile(dirent_h, &dirp)) break;
+                std::string file_name = dirp.cFileName;
 
-        DIR *dirp = opendir(path.c_str());
-
-        long name_max = pathconf(path.c_str(), _PC_NAME_MAX);
-        if(!name_max) name_max = 0xFF;
-        int len = offsetof(struct dirent, d_name)+name_max+1;
-        struct dirent *dirent_p = (struct dirent *)malloc(len);
-
-        for(readdir_r(dirp, dirent_p, &dirent_p); dirent_p!=nullptr; readdir_r(dirp, dirent_p, &dirent_p)){
-            if((dirent_p->d_type==DT_REG) || (dirent_p->d_type==DT_DIR)){
-                bool system_link = true;
-                std::string file_name = dirent_p->d_name;
-
-                for(std::string::iterator iter = file_name.begin(); iter!=file_name.end(); iter++){
-                    if(*iter!='.')
-                        system_link = false;
-                }
-
-                if(!system_link){
-                    printf("Reading %s.\n", dirent_p->d_name);
+                if(NotSystemLink(file_name)){
                     Entry *e = Entry::FromPath(path+"/"+file_name);
                     if(e) Dguts->Contents.push_back(e);
-                    //entries.push(path+"/"+file_name);
+                }
+
+            }
+
+            FindClose(dirent_h);
+#else
+
+            DIR *dirp = opendir(path.c_str());
+
+            long name_max = pathconf(path.c_str(), _PC_NAME_MAX);
+            if(!name_max) name_max = 0xFF;
+            int len = offsetof(struct dirent, d_name)+name_max+1;
+            struct dirent *dirent_p = (struct dirent *)malloc(len);
+
+            for(readdir_r(dirp, dirent_p, &dirent_p); dirent_p!=nullptr; readdir_r(dirp, dirent_p, &dirent_p)){
+                if((dirent_p->d_type==DT_REG) || (dirent_p->d_type==DT_DIR)){
+                    std::string file_name = dirent_p->d_name;
+
+                    if(NotSystemLink(file_name)){
+                        Entry *e = Entry::FromPath(path+"/"+file_name);
+                        if(e) Dguts->Contents.push_back(e);
+                    }
                 }
             }
-        }
 
-        closedir(dirp);
+            closedir(dirp);
 
 #endif
-
+        }
     }
 
     Entry* Entry::FromPath(const std::string &aPath){
