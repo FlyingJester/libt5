@@ -14,6 +14,8 @@
 #else
 
 #include <dirent.h>
+#include <unistd.h>
+
 
 #endif
 
@@ -59,18 +61,22 @@ namespace fs {
 
         assert(t5::IsDir(path.c_str()));
 
-        std::stack<std::string> entries;
-
 #ifdef _WIN32
 
 
 #else
 
         DIR *dirp = opendir(path.c_str());
-        for(struct dirent *dir = readdir(dirp); dir!=nullptr; dir = readdir(dirp)){
-            if((dir->d_type==DT_REG) || (dir->d_type==DT_DIR)){
+
+        long name_max = pathconf(path.c_str(), _PC_NAME_MAX);
+        if(!name_max) name_max = 0xFF;
+        int len = offsetof(struct dirent, d_name)+name_max+1;
+        struct dirent *dirent_p = (struct dirent *)malloc(len);
+
+        for(readdir_r(dirp, dirent_p, &dirent_p); dirent_p!=nullptr; readdir_r(dirp, dirent_p, &dirent_p)){
+            if((dirent_p->d_type==DT_REG) || (dirent_p->d_type==DT_DIR)){
                 bool system_link = true;
-                std::string file_name = dir->d_name;
+                std::string file_name = dirent_p->d_name;
 
                 for(std::string::iterator iter = file_name.begin(); iter!=file_name.end(); iter++){
                     if(*iter!='.')
@@ -78,8 +84,10 @@ namespace fs {
                 }
 
                 if(!system_link){
-                    printf("Reading %s.\n", dir->d_name);
-                    entries.push(path+"/"+file_name);
+                    printf("Reading %s.\n", dirent_p->d_name);
+                    Entry *e = Entry::FromPath(path+"/"+file_name);
+                    if(e) Dguts->Contents.push_back(e);
+                    //entries.push(path+"/"+file_name);
                 }
             }
         }
@@ -87,19 +95,6 @@ namespace fs {
         closedir(dirp);
 
 #endif
-
-        while(!entries.empty()){
-            printf("Reading %s.\n", entries.top().c_str());
-            Entry *e = Entry::FromPath(entries.top());
-
-            if(e){
-                Dguts->Contents.push_back(e);
-                printf("Adding entry %s (%s) (%p)\n", e->GetPath().c_str(), entries.top().c_str(), e);
-            }
-            else
-                printf("Ignoring entry null (%s) (%p)\n", entries.top().c_str(), e);
-            entries.pop();
-        }
 
     }
 
