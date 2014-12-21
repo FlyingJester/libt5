@@ -15,6 +15,24 @@
 
 namespace t5 {
 
+    /////
+    // Simple wrappers around stdout, stderr, and stdin.
+    //
+    DataSourcePusher *DataSource::StdOut(){
+        static DataSourcePusher *stdout_ = OneWayFromCFile<DataSourcePusher>(stdout);
+        return stdout_;
+    }
+
+    DataSourcePusher *DataSource::StdErr(){
+        static DataSourcePusher *stderr_ = OneWayFromCFile<DataSourcePusher>(stderr);
+        return stderr_;
+    }
+
+    DataSourcePuller *DataSource::StdIn(){
+        static DataSourcePuller *stdin_ = OneWayFromCFile<DataSourcePuller>(stdin);
+        return stdin_;
+    }
+
     size_t DataConverter::size(void) {return 0;}
 
     /////

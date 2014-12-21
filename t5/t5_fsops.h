@@ -1,7 +1,16 @@
 #pragma once
+#include <string>
+
 namespace t5 {
     bool IsDir(const char *aPath);
     bool IsFile(const char *aPath);
+
+    inline bool IsDir(const std::string &aPath){
+        return IsDir(aPath.c_str());
+    }
+    inline bool IsFile(const std::string &aPath){
+        return IsFile(aPath.c_str());
+    }
 }
 
 #ifndef T5_DEPRECATED

@@ -115,7 +115,7 @@ namespace fs {
             closedir(dirp);
 
 #endif
-        }
+        } // End platform specific stuff.
     }
 
     Entry* Entry::FromPath(const std::string &aPath){

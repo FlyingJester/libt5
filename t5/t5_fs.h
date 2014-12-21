@@ -7,6 +7,9 @@ namespace t5 {
 
     class DataSource;
 
+    // Heavyweight filesystem iterators. If you ONLY want to know what files
+    //   exist in a certain directory, check out the fs_iterator in t5_fsops.h
+
 namespace fs {
     class EntryGuts;
     class DirectoryGuts;

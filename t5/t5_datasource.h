@@ -3,8 +3,6 @@
 #include <cstdlib>
 #include <cstring>
 
-
-
 namespace t5 {
 
 class DataConverter;
@@ -30,7 +28,7 @@ public:
     // Creates a data source from a file. Uses the most native file reading API.
     static DataSource *FromPath(int aAccess, const char *path);
     // Creates a data source from a C file handle.
-    static DataSource *FromCFileHandle(void *aFile);
+    static DataSource *FromCFileHandle(void /*FILE*/ *aFile);
     // Creates a data source that reads out what is written into it. Same functionally as a Unix Pipe.
     static DataSource *DataPipe(int aAccess);
     // Creates a simple push/pull data source from aFrom.
@@ -44,6 +42,17 @@ public:
     // Create a pusher or puller based on this data source.
     DataSourcePusher *AsPusher();
     DataSourcePuller *AsPuller();
+
+    // Simple wrappers around stdout, stderr, and stdin.
+    static DataSourcePusher *StdOut();
+    static DataSourcePusher *StdErr();
+    static DataSourcePuller *StdIn();
+
+    template<class A /*Derived from DataSource*/>
+    static A *OneWayFromCFile(void /*FILE*/ *aFile){
+        t5::DataSource *lSource = t5::DataSource::FromCFileHandle(aFile);
+        return new A(lSource);
+    }
 
     #ifdef USE_ZLIB
     static DataSource *CreateZlib(DataSource *aFrom);
