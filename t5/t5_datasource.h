@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string>
 #include <cstdlib>
 #include <cstring>
 
@@ -53,7 +54,7 @@ public:
         t5::DataSource *lSource = t5::DataSource::FromCFileHandle(aFile);
         return new A(lSource);
     }
-
+    
     #ifdef USE_ZLIB
     static DataSource *CreateZlib(DataSource *aFrom);
     #endif
@@ -67,15 +68,65 @@ public:
     DataSource(int aAccess);
 
     virtual void Read(void *aTo, size_t aLen) = 0;
+    virtual void Write(const void *aTo, size_t aLen) = 0;
 
+    template<typename T>
+    size_t Put(T a){
+        Write(&a, sizeof(T));
+        return sizeof(T);
+    }
+    
     inline void WriteS(const char *aString){
         Write(aString, strlen(aString));
     }
+    
+    inline void WriteS(const std::string &aString){
+        Write(aString.c_str(), aString.length());
+    }
 
-    virtual void Write(const void *aTo, size_t aLen) = 0;
+    template<typename T, int Base, int BufferSize /*Should be 32 or greater*/>
+    void WriteWithNumericBase(T i){
+        char buffer[BufferSize], rbuffer[BufferSize];
+        int at_ = 0, rat_ = 0;
 
+        memset(buffer,  0, BufferSize);
+        memset(rbuffer, 0, BufferSize);
 
+        while(i>0 && (at_<BufferSize)){
+            char c = (i%Base)+'0';
 
+            if(c>'9'){
+                c-='0';
+                c+='a';
+            }
+
+            rbuffer[at_++] = c;
+            i/=Base;
+            i-=i%Base; // Theoretically for floating point numbers.
+        }
+
+        // We have it backwards.
+        while(at_>=0) buffer[rat_++] = rbuffer[at_--];
+
+        Write(buffer, --rat_);
+
+    }
+    
+    template<typename T, typename ...ARGS>
+    void WriteF(T first, ARGS... args){
+        WriteF(first);
+        WriteF(args...);
+    }
+
+    template<typename T>
+    void WriteF(T a){
+        
+        if(std::is_integral<T>::value)
+            Put(a);
+        else
+            WriteS(a);
+    }
+    
     virtual size_t Tell() = 0;
     virtual size_t Length() = 0;
     virtual void Seek(size_t aTo, int aWhence) = 0;
@@ -85,12 +136,6 @@ public:
         T rData;
         Read(&rData, sizeof(rData));
         return rData;
-    }
-
-    template<typename T>
-    size_t Put(T a){
-        Write(&a, sizeof(T));
-        return sizeof(T);
     }
 
     virtual char GetC(void){
