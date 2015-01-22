@@ -122,7 +122,7 @@ public:
     void WriteF(T a){
         
         if(std::is_integral<T>::value)
-            Put(a);
+            WriteS(std::to_string(a));
         else
             WriteS(a);
     }
