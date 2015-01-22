@@ -121,7 +121,9 @@ public:
     template<typename T>
     void WriteF(T a){
         
-        if(std::is_integral<T>::value)
+        if(std::is_same<char, T>::value)
+            Put(a);
+        else if(std::is_integral<T>::value)
             WriteS(std::to_string(a));
         else
             WriteS(a);
