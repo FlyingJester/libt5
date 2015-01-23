@@ -46,13 +46,17 @@ namespace fs {
             EntryIterator &operator+(int i);
             EntryIterator &operator++();
             EntryIterator &operator--();
+            EntryIterator operator++(int);
+            EntryIterator operator--(int);
             EntryIterator &operator=(const EntryIterator &rValue);
             Entry &operator*() const;
             Entry *operator->() const;
             bool operator!=(const EntryIterator &rValue) const;
             bool operator==(const EntryIterator &rValue) const;
         };
-
+        
+        typedef EntryIterator iterator;
+        
         Directory *Parent() const{
             return mParent.get();
         }

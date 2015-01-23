@@ -120,13 +120,7 @@ public:
 
     template<typename T>
     void WriteF(T a){
-        
-        if(std::is_same<char, T>::value)
-            Put(a);
-        else if(std::is_integral<T>::value)
-            WriteS(std::to_string(a));
-        else
-            WriteS(a);
+        WriteS(std::to_string(a));
     }
     
     virtual size_t Tell() = 0;
@@ -144,8 +138,22 @@ public:
         return Get<char>();
     }
 
-
 };
+
+template<>
+inline void DataSource::WriteF<const char *>(const char *a){
+    WriteS(a);
+}
+
+template<>
+inline void DataSource::WriteF<std::string>(std::string a){
+    WriteS(a);
+
+}
+template<>
+inline void DataSource::WriteF<char>(char a){
+    Put(a);
+}
 
 class DataSourcePassThrough : public DataSource {
 protected:

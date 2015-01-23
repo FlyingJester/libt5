@@ -164,6 +164,21 @@ namespace fs {
         mSelf++;
         return *this;
     }
+    
+    Entry::EntryIterator &Entry::EntryIterator::operator--(){
+        mSelf--;
+        return *this;
+    }
+    
+    Entry::EntryIterator Entry::EntryIterator::operator++(int){
+        mSelf++;
+        return *this;
+    }
+    
+    Entry::EntryIterator Entry::EntryIterator::operator--(int){
+        mSelf--;
+        return *this;
+    }
 
     Entry::EntryIterator &Entry::EntryIterator::operator+(int i){
 
