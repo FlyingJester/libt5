@@ -20,6 +20,8 @@ bool t5::IsFile(const char *aPath){
 
 #ifdef _MSC_VER
 
+#include <Windows.h>
+
 #define DOESNTEXIST(attrs) attrs==INVALID_FILE_ATTRIBUTES
 
 bool T5_IsFileNaive(const char *path){

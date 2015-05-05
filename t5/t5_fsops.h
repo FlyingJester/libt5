@@ -1,9 +1,12 @@
 #pragma once
+
+#include "t5_stub.h"
+
 #include <string>
 
 namespace t5 {
-    bool IsDir(const char *aPath);
-    bool IsFile(const char *aPath);
+    bool T5_EXPORT IsDir(const char *aPath);
+    bool T5_EXPORT IsFile(const char *aPath);
 
     inline bool IsDir(const std::string &aPath){
         return IsDir(aPath.c_str());
@@ -12,16 +15,3 @@ namespace t5 {
         return IsFile(aPath.c_str());
     }
 }
-
-#ifndef T5_DEPRECATED
-#define T5_DEPRECATED
-#endif
-
-inline bool T5_IsDir(const char *aPath) T5_DEPRECATED;
-inline bool T5_IsFile(const char *aPath) T5_DEPRECATED;
-
-inline bool T5_IsDir(const char *aPath){return t5::IsDir(aPath);}
-inline bool T5_IsFile(const char *aPath){return t5::IsFile(aPath);}
-
-//FS iterators
-

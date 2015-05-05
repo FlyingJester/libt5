@@ -4,12 +4,10 @@ import glob
 
 Import("globalenv IsLinux IsWindows IsDarwin LibraryInstall compiler builddir")
 
-libt5 = globalenv.SharedLibrary("t5", glob.glob("*.cpp"))
-t5convert = globalenv.Program("t5conv", os.path.join("t5convert", "main.cpp"), CPPPATHS = [os.getcwd()], LIBS=["t5"], LIBPATH = ["./"])
-
-Depends(t5convert, libt5)
+libt5 = globalenv.SharedLibrary("t5", glob.glob("*.cpp"), CPPDEFINES = ["T5_INTERNAL=1"])
+#t5convert = globalenv.Program("t5conv", os.path.join("t5convert", "main.cpp"), CPPPATHS = [os.getcwd()], LIBS=[libt5], LIBPATH = ["./"])
 
 LibraryInstall(builddir, libt5, globalenv)
-globalenv.Install(builddir, [t5convert])
+#globalenv.Install(builddir, [t5convert])
 
 Return("libt5")

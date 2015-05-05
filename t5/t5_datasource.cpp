@@ -8,6 +8,9 @@
     #include <sys/stat.h>
     #include <sys/types.h>
     #include <sys/mman.h>
+#else
+    #include <cassert>
+    #include <cstdint>
 #endif
 #ifdef USE_ZLIB
     #include <zlib.h>
@@ -51,7 +54,7 @@ namespace t5 {
         uint8_t *mData;
 #ifdef _WIN32
     private:
-        uint8_t mSecretData[tBufferSize]
+        uint8_t mSecretData[tBufferSize];
     public:
         FastBufferConverter(){
             mData = mSecretData;
@@ -370,15 +373,12 @@ namespace t5 {
           : DataSource(aAccess) {
             std::string lFlags = "";
             if(aAccess&eRead)
-                lFlags.append("r");
+                lFlags+='r';
             if(aAccess&eWrite)
-                lFlags.append("w");
+                lFlags+='w';
             if(aAccess&eAppend)
-                lFlags.append("a");
-
-
+                lFlags+='a';
             mFile = fopen(aPath, lFlags.c_str());
-
         }
 
         CFileSource(int aAccess, FILE *aFile)
@@ -424,9 +424,7 @@ namespace t5 {
                     lWhence = SEEK_CUR;
                 break;
             }
-
             fseek(mFile, aTo, lWhence);
-
         }
 
     };
@@ -477,7 +475,10 @@ namespace t5 {
     DataSource *DataSource::DataPipe(int aAccess){
     #ifndef _WIN32
         return new PipeSource(aAccess);
-    #endif
+    #else
+        assert(false);
+		return nullptr;
+	#endif
     }
 
     DataSourcePusher *DataSource::AsPusher(){

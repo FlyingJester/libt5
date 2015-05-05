@@ -1,4 +1,7 @@
 #pragma once
+
+#include "t5_stub.h"
+
 #include <string>
 #include <memory>
 #include <list>
@@ -29,7 +32,7 @@ namespace fs {
 
 
 
-    class Entry {
+    class T5_EXPORT Entry {
     protected:
         std::shared_ptr<EntryGuts> Eguts;
         std::shared_ptr<Directory> mParent;
@@ -37,7 +40,7 @@ namespace fs {
         Entry(const std::string &path);
     public:
 
-        class EntryIterator {
+        class T5_EXPORT EntryIterator {
         public:
             std::list<Entry *>::iterator mSelf;
 
@@ -83,7 +86,7 @@ namespace fs {
     //  anything that holds multiple entries uniquely as its own (which
     //  inludes directories, but also archives and 'compressed folders').
     //
-    class Directory : public Entry {
+    class T5_EXPORT Directory : public Entry {
     protected:
         std::shared_ptr<DirectoryGuts> Dguts;
 
@@ -109,7 +112,7 @@ namespace fs {
         virtual Directory* AsDirectory() {return this;}
     };
 
-    class File : public Entry {
+    class T5_EXPORT File : public Entry {
 
         File(const std::string &path);
     public:

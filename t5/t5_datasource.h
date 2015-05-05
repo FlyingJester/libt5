@@ -1,5 +1,7 @@
 #pragma once
 
+#include "t5_stub.h"
+
 #include <string>
 #include <cstdlib>
 #include <cstring>
@@ -10,7 +12,7 @@ class DataConverter;
 class DataSourcePusher;
 class DataSourcePuller;
 
-class DataSource {
+class T5_EXPORT DataSource {
 public:
     enum {
         eRead       = 1<<0,
@@ -155,7 +157,7 @@ inline void DataSource::WriteF<char>(char a){
     Put(a);
 }
 
-class DataSourcePassThrough : public DataSource {
+class T5_EXPORT DataSourcePassThrough : public DataSource {
 protected:
     DataSource *mSource;
 public:
@@ -169,7 +171,7 @@ public:
     virtual void Seek(size_t aTo, int aWhence);
 };
 
-class DataSourcePusher : public DataSourcePassThrough {
+class T5_EXPORT DataSourcePusher : public DataSourcePassThrough {
 public:
     virtual ~DataSourcePusher() {}
     DataSourcePusher(DataSource *aPushTo);
@@ -180,11 +182,11 @@ public:
     virtual void Seek(size_t aTo, int aWhence){};
 };
 
-class DataSourcePuller : public DataSourcePassThrough {
+class T5_EXPORT DataSourcePuller : public DataSourcePassThrough {
 public:
     virtual ~DataSourcePuller() {}
     DataSourcePuller(DataSource *aPullFrom);
-
+	
     virtual void Write(const void *aTo, size_t aLen);
     virtual size_t Tell();
     virtual size_t Length();
@@ -193,7 +195,7 @@ public:
 
 /////
 // A synchronous data converter.
-class DataConverter {
+class T5_EXPORT DataConverter {
 public:
     DataConverter() {};
     virtual ~DataConverter() {};

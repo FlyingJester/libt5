@@ -1,5 +1,6 @@
 #pragma once
 
+#include "t5_stub.h"
 #include "t5_datasource.h"
 
 #include <string>
@@ -14,7 +15,7 @@ namespace map{
     class Group;
     class Value;
 
-    class Entry {
+    class T5_EXPORT Entry {
     public:
         Entry(const string&, Group *);
         Entry(Group *);
@@ -55,7 +56,7 @@ namespace map{
 
     };
 
-    class Group : public Entry {
+    class T5_EXPORT Group : public Entry {
     public:
 
         Group(const string &aName, Group *group)
@@ -153,7 +154,7 @@ namespace map{
 
     };
 
-    class Array : public Group {
+    class T5_EXPORT Array : public Group {
     public:
 
         Array(string &name, Group *group);
@@ -167,7 +168,7 @@ namespace map{
         }
     };
 
-    class Value : public Entry{
+    class T5_EXPORT Value : public Entry{
     public:
         string RawValue;
         Value(const string &name, const string &value, Group *group)

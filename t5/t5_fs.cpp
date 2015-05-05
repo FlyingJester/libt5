@@ -80,7 +80,7 @@ namespace fs {
             WIN32_FIND_DATA dirp;
             HANDLE dirent_h = FindFirstFile((path+"\\*").c_str(), &dirp);
 
-            while((GetLastError()!=ERROR_FILE_NOT_FOUND) && (GetLastError()!=ERROR_NO_MORE_FILE)){
+            while((GetLastError()!=ERROR_FILE_NOT_FOUND) && (GetLastError()!=ERROR_NO_MORE_FILES)){
                 if(!FindNextFile(dirent_h, &dirp)) break;
                 std::string file_name = dirp.cFileName;
 

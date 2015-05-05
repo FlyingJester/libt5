@@ -15,6 +15,7 @@
 
 #endif
 
+#include "t5_stub.h"
 #include "t5_datasource.h"
 #include "t5_genericmap.h"
 #include "t5_fs.h"
